@@ -1,0 +1,13 @@
+name = "daily-brain-game-challenges"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Runs once a day. It always prepares 7 days ahead, so the exact hour
+# doesn't matter and daylight saving time can't cause a missing day.
+[triggers]
+crons = ["0 8 * * *"]
+
+# Secrets (set these with `npx wrangler secret put <NAME>`, never commit them):
+#   SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY
+#   ADMIN_SECRET
