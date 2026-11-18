@@ -93,6 +93,12 @@ create policy "addressee can accept a request"
   using (addressee_id = auth.uid())
   with check (addressee_id = auth.uid() and status = 'accepted');
 
+-- RLS checks rows, not columns: without this, the addressee could accept a
+-- request while rewriting requester_id to anyone, creating a friendship the
+-- other person never asked for. Only the status column may be updated.
+revoke update on public.friendships from anon, authenticated;
+grant update (status) on public.friendships to authenticated;
+
 create policy "either side can remove a friendship"
   on public.friendships for delete
   to authenticated
@@ -166,8 +172,11 @@ declare
   streak_length      integer := 0;
   played_that_day    boolean;
 begin
-  -- Only allow checking yourself or an accepted friend
-  if target_user <> auth.uid() and not public.are_friends(auth.uid(), target_user) then
+  -- Only allow checking yourself or an accepted friend. Signed-out callers
+  -- get null too: with auth.uid() null, a plain `<>` check evaluates to null
+  -- and would let them read anyone's streak.
+  if auth.uid() is null
+     or (target_user <> auth.uid() and not public.are_friends(auth.uid(), target_user)) then
     return null;
   end if;
 
