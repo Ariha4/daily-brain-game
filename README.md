@@ -51,6 +51,22 @@ Check the `daily_challenges` table in Supabase. You should see 7 rows.
 2. File → Add Package Dependencies → `https://github.com/supabase/supabase-swift`.
 3. Put the Project URL and anon key in a `Secrets.xcconfig` (already in `.gitignore`).
 
+## Tests
+
+CI runs both of these on every pull request.
+
+```bash
+# Worker: unit tests and a dry-run bundle
+cd worker && npm ci && npm test && npm run build
+
+# Schema: apply to a throwaway Postgres and check the row-level security rules
+# (supabase_shim.sql stands in for Supabase's auth schema and roles)
+export PGHOST=localhost PGUSER=postgres PGDATABASE=postgres
+psql -v ON_ERROR_STOP=1 -f supabase/tests/supabase_shim.sql
+psql -v ON_ERROR_STOP=1 -f supabase/schema.sql
+psql -v ON_ERROR_STOP=1 -o /dev/null -f supabase/tests/rls_test.sql
+```
+
 ## One-week plan
 
 | Day | Goal | Done when |
